@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <tool_dependency>
   <package name="openssl" version="1.0.1g">
-    <repository name="package_openssl" owner="jankanis" prior_installation_required="True" />
+    <repository name="package_openssl_1_0" owner="iuc" prior_installation_required="True" />
   </package>
 
   <package name="sqlite" version="3.8.3">
@@ -9,7 +9,7 @@
   </package>
 
   <package name="gdbm" version="1.11">
-    <repository name="package_gdbm_1_11" owner="jankanis" prior_installation_required="True" />
+    <repository name="package_gdbm_1_11" owner="iuc" prior_installation_required="True" />
   </package>
 
   
@@ -19,13 +19,13 @@
         <action type="download_by_url">https://www.python.org/ftp/python/3.4.1/Python-3.4.1.tgz</action>
 
         <action type="set_environment_for_install">
-          <repository name="package_openssl" owner="jankanis">
+          <repository name="package_openssl_1_0" owner="iuc">
             <package name="openssl" version="1.0.1g" />
           </repository>
           <repository name="package_sqlite_3_8_3" owner="iuc">
             <package name="sqlite" version="3.8.3" />
           </repository>
-          <repository name="package_gdbm_1_11" owner="jankanis">
+          <repository name="package_gdbm_1_11" owner="iuc">
             <package name="gdbm" version="1.11" />
           </repository>
         </action>
@@ -33,9 +33,11 @@
         <action type="shell_command"><![CDATA[
           # The python build system doesn't check CPATH / C(PLUS)_INCLUDE_PATH which is set by the depended-upon
           # tool definitions for these sources, but it does check CPPFLAGS / LDFLAGS
-          # Currently not whitespace-safe, but galaxy itself isn't whitespace-safe either so it doesn't matter (yet)
+          # Currently not whitespace-safe, I haven't found a way yet to quote the *FLAGS values so that they are
+          # correctly recognized by both the python build process and the compiler. But as galaxy itself isn't
+          # whitespace-safe either it doesn't really matter (currently).
           oldifs="$IFS"
-          IFS=:
+          IFS=":"
           for p in $CPLUS_INCLUDE_PATH
           do
               CPPFLAGS="$CPPFLAGS -I$p"
@@ -59,8 +61,8 @@
 
         <action type="set_environment">
           <environment_variable name="PATH" action="prepend_to">$INSTALL_DIR/bin</environment_variable>
-	  <environment_variable name="LD_LIBRARY_PATH" action="prepend_to">$ENV[LD_LIBRARY_PATH]</environment_variable>
-          <!-- empty PYTHONPATH, otherwise we will get Galaxy's Python 2 libraries in the Python 3 path -->
+          <environment_variable name="LD_LIBRARY_PATH" action="prepend_to">$ENV[LD_LIBRARY_PATH]</environment_variable>
+          <!-- clear PYTHONPATH, otherwise we will get Galaxy's Python 2 libraries in the Python 3 path. -->
           <environment_variable name="PYTHONPATH" action="set_to"></environment_variable>
           <environment_variable name="PYTHONHOME" action="set_to">$INSTALL_DIR</environment_variable>
           <environment_variable name="PKG_CONFIG_PATH" action="prepend_to">$INSTALL_DIR/lib/pkgconfig</environment_variable>
@@ -71,45 +73,73 @@
     <readme><![CDATA[
       Python 3.4.1
 
-      This build of python is configured with --enable-loadable-sqlite-extensions and a --prefix, any other settings are default. This build does not include modules for lzma and Tkinter, but does include ssl, (g)dbm and sqlite. Adding the missing modules should not be very difficult but requires wrapping the external sources that these modules require inside galaxy. 
+      The Python programming language version 3.
 
-      Python as of version 3.3 includes a built-in virtual environment manager. To create a python 3 virtual env, include the following actions in your tool_dependencies.xml:
+      http://www.python.org
+
+
+      This build of python is configured with --enable-loadable-sqlite-extensions, any other settings are default. This build does not include modules for lzma and Tkinter, but does include ssl, (g)dbm and sqlite. Adding the missing modules should not be very difficult but requires wrapping the external sources that these modules require inside galaxy. 
+
+      Python as of version 3.3 includes a built-in virtual environment manager. To create a python 3 virtual env, include the following actions in your tool_dependencies.xml, e.g. for a package MY_TOOL_venv:
 
       <action type="set_environment_for_install">
         <repository name="python3" owner="jankanis">
           <package name="python3" version="3.4.1" />
         </repository>
-	<!-- other install time dependencies -->
+        <!-- other install time dependencies -->
       </action>
 
       <action type="shell_command">
-	# Unset any saved environment settings from parent virtual
-	# environments, e.g. for python 2 or if Galaxy itself is running
-	# from within a virtual environment.
-	unset _OLD_VIRTUAL_PATH; unset _OLD_VIRTUAL_PYTHONHOME
-	pyvenv MY_TOOL_venv
-	MY_TOOL_venv/bin/pip3 install {{NEEDED_PYTHON_PACKAGES}}
+        # Unset any saved environment settings from parent virtual
+        # environments, e.g. for python 2 or if Galaxy itself is running
+        # from within a virtual environment.
+        unset _OLD_VIRTUAL_PATH; unset _OLD_VIRTUAL_PYTHONHOME
+        # Create virtual environment MY_TOOL_venv
+        pyvenv MY_TOOL_venv
+        # install python packages
+        MY_TOOL_venv/bin/pip3 install {{NEEDED_PYTHON_PACKAGES}}
       </action>
 
       <action type="set_environment">
-        <!-- Remove any incoming PYTHONPATH elements from Galaxy's own python 2 environment.
-	     If you want to chain multiple virtual environments so that packages installed
-	     in all of them are visible, you need to arrange for PYTHONPATH to include the
-	     site-packages directories of all of them, so in that case just a plain 'set_to'
-	     would not be sufficient.
-	 -->
-	<environment_variable name="PYTHONPATH" action="set_to">$INSTALL_DIR/MY_TOOL_venv/lib/python3.4/site-packages</environment_variable>
-	<!-- All that is really needed to use a specific virtual environment is that the
-	     python interpreter in that environment is used, so add it to PATH -->
-	<environment_variable name="PATH" action="prepend_to">$INSTALL_DIR/MY_TOOL_venv/bin</environment_variable>
-	<!-- Clear incoming PYTHONHOME just like the venv's 'activate' command does -->
-	<environment_variable name="PYTHONHOME" action="set_to"></environment_variable>
-	<!-- To find shared libraries for python built-in modules such as libssl or libsqlite3
-	     we need to re-export LD_LIBRARY_PATH -->
-	<environment_variable name="LD_LIBRARY_PATH" action="prepend_to">$ENV[LD_LIBRARY_PATH]</environment_variable>
+
+	<!-- Setting the PYTHONPATH correctly can be a bit tricky, because you must
+             make sure that the runtime PYTHONPATH from galaxy itself is not
+             included, as it probably points to python 2 code that can crash a
+             program if python 3 tries to load it.
+
+             If you only use a single virtual environment that is created
+             specifically for a tool you are creating, you can just use a set_to
+             like below.
+
+             If you create a virtual environment installation that is meant to be
+             reused by other packages, the virtual environment should probably
+             prepend its site-packages to the PYTHONPATH since a tool could be
+             using python modules from several virtual environments. But in such a
+             scenario the tool that uses these virtual environments should also
+             depend directly on the python3 package, and this dependency should be
+             listed before any virtual environment dependencies. This ensures that
+             the python3 environment settings that clear PYTHONPATH are sourced
+             first so galaxy's runtime PYTHONPATH is excluded. Virtual environments
+             can then prepend their PYTHONPATHs to each other. -->
+        <environment_variable name="PYTHONPATH" action="set_to">$INSTALL_DIR/MY_TOOL_venv/lib/python3.4/site-packages</environment_variable>
+        <!-- All that is really needed to use a specific virtual environment is that the
+             python interpreter in that environment is used, so add it to PATH -->
+        <environment_variable name="PATH" action="prepend_to">$INSTALL_DIR/MY_TOOL_venv/bin</environment_variable>
+        <!-- Clear incoming PYTHONHOME just like the venv's 'activate' command does -->
+        <environment_variable name="PYTHONHOME" action="set_to"></environment_variable>
+        <!-- To find shared libraries for python built-in modules such as libssl or libsqlite3
+             we need to re-export LD_LIBRARY_PATH -->
+        <environment_variable name="LD_LIBRARY_PATH" action="prepend_to">$ENV[LD_LIBRARY_PATH]</environment_variable>
       </action>
 
+
+      Then, in your MY_TOOL.xml add the following requirement:
+
+      <requirements>
+        <requirement name="package" version="XXX">MY_TOOL_venv</requirement>
+      </requirements>
+      
     ]]></readme>
-    
+
   </package>
 </tool_dependency>
