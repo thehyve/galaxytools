@@ -1,11 +1,23 @@
 <?xml version="1.0"?>
 <tool_dependency>
-  <package name="openssl" version="1.0.1g">
-    <repository name="package_openssl_1_0" owner="iuc" prior_installation_required="True" />
-  </package>
-
   <package name="zlib" version="1.2.8">
     <repository name="package_zlib_1_2_8" owner="iuc" prior_installation_required="True" />
+  </package>
+
+  <package name="readline" version="6.2">
+    <repository name="package_readline_6_2" owner="iuc" prior_installation_required="True" />
+  </package>
+
+  <package name="bzlib" version="1.0.6">
+    <repository name="package_bzlib_1_0" owner="iuc" prior_installation_required="True" />
+  </package>
+
+  <package name="xz" version="5.0.5">
+    <repository name="package_xz_5_0_5" owner="iuc" prior_installation_required="True" />
+  </package>
+
+  <package name="openssl" version="1.0.1g">
+    <repository name="package_openssl_1_0" owner="iuc" prior_installation_required="True" />
   </package>
 
   <package name="sqlite" version="3.8.3">
@@ -14,6 +26,10 @@
 
   <package name="gdbm" version="1.11">
     <repository name="package_gdbm_1_11" owner="iuc" prior_installation_required="True" />
+  </package>
+
+  <package name="ncurses" version="5.9">
+    <repository name="package_ncurses_5_9" owner="iuc" prior_installation_required="True" />
   </package>
 
   
@@ -26,6 +42,15 @@
           <repository name="package_zlib_1_2_8" owner="iuc">
             <package name="zlib" version="1.2.8" />
           </repository>
+          <repository name="package_readline_6_2" owner="iuc">
+            <package name="readline" version="6.2" />
+          </repository>
+          <repository name="package_bzlib_1_0" owner="iuc">
+            <package name="bzlib" version="1.0.6" />
+          </repository>
+          <repository name="package_xz_5_0_5" owner="iuc">
+            <package name="xz" version="5.0.5" />
+          </repository>
           <repository name="package_openssl_1_0" owner="iuc">
             <package name="openssl" version="1.0.1g" />
           </repository>
@@ -34,6 +59,9 @@
           </repository>
           <repository name="package_gdbm_1_11" owner="iuc">
             <package name="gdbm" version="1.11" />
+          </repository>
+          <repository name="package_ncurses_5_9" owner="iuc">
+            <package name="ncurses" version="5.9" />
           </repository>
         </action>
 
@@ -85,7 +113,7 @@
       http://www.python.org
 
 
-      This build of python is configured with --enable-loadable-sqlite-extensions, any other settings are default. This build does not include modules for lzma and Tkinter, but does include ssl, (g)dbm and sqlite. Adding the missing modules should not be very difficult but requires wrapping the external sources that these modules require inside galaxy. 
+      This build of python is configured with --enable-loadable-sqlite-extensions, any other settings are default. This build does not include the Tkinter module, but does include other builtin modules. Adding the missing modules should not be very difficult but requires wrapping the external sources that these modules require inside galaxy. 
 
       Python as of version 3.3 includes a built-in virtual environment manager. To create a python 3 virtual env, include the following actions in your tool_dependencies.xml, e.g. for a package MY_TOOL_venv:
 
@@ -93,7 +121,7 @@
         <repository name="python3" owner="jankanis">
           <package name="python3" version="3.4.1" />
         </repository>
-        <!-- other install time dependencies -->
+        <!-- ... other install time dependencies ... -->
       </action>
 
       <action type="shell_command">
