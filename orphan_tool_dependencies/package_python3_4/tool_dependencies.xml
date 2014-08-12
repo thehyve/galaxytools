@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <tool_dependency>
-  <package name="zlib" version="1.2.8">
-    <repository name="package_zlib_1_2_8" owner="iuc" prior_installation_required="True" />
-  </package>
-
   <package name="readline" version="6.2">
     <repository name="package_readline_6_2" owner="iuc" prior_installation_required="True" />
+  </package>
+
+  <package name="zlib" version="1.2.8">
+    <repository name="package_zlib_1_2_8" owner="iuc" prior_installation_required="True" />
   </package>
 
   <package name="bzlib" version="1.0.6">
@@ -100,6 +100,8 @@
           <!-- clear PYTHONPATH, otherwise we will get Galaxy's Python 2 libraries in the Python 3 path. -->
           <environment_variable name="PYTHONPATH" action="set_to"></environment_variable>
           <environment_variable name="PYTHONHOME" action="set_to">$INSTALL_DIR</environment_variable>
+          <environment_variable name="C_INCLUDE_PATH" action="prepend_to">$INSTALL_DIR/include/python3.4m</environment_variable>
+          <environment_variable name="CPLUS_INCLUDE_PATH" action="prepend_to">$INSTALL_DIR/include/python3.4m</environment_variable>
           <environment_variable name="PKG_CONFIG_PATH" action="prepend_to">$INSTALL_DIR/lib/pkgconfig</environment_variable>
         </action>
       </actions>
@@ -137,7 +139,7 @@
 
       <action type="set_environment">
 
-	<!-- Setting the PYTHONPATH correctly can be a bit tricky, because you must
+        <!-- Setting the PYTHONPATH correctly can be a bit tricky, because you must
              make sure that the runtime PYTHONPATH from galaxy itself is not
              included, as it probably points to python 2 code that can crash a
              program if python 3 tries to load it.
